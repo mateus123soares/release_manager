@@ -1,0 +1,17 @@
+networks: 
+  develop-network:
+    driver: bridge
+
+services:
+  database:
+    container_name: postgresql
+    image: postgres:17.5
+    ports:
+      - 5432:5432
+    restart: always
+    env_file: ".env"
+    volumes:
+      - $PWD/database/data:/var/lib/postgresql/data
+      - $PWD/scripts/init_db.sql:/docker-entrypoint-initdb.d/init_product.sql
+    networks:
+      - develop-network
