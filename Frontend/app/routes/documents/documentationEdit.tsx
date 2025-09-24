@@ -1,7 +1,7 @@
-import type { Route } from "./+types/home";
+import type { Route } from "../+types/home";
 import { useParams } from "react-router";
 
-import { Documentation } from "../pages/documentation/Documentation";
+import { Documentation } from "../../pages/documentation/DocumentationEdit";
 
 export function meta({}: Route.MetaArgs) {
   return [
@@ -10,12 +10,12 @@ export function meta({}: Route.MetaArgs) {
   ];
 }
 
-import {Projects} from "../../mocks/projects"
+import {Documents} from "../../../mocks/documents"
 
 export default function Docs() {
     const { project } = useParams<{ project: string }>();
 
     return <Documentation 
-      project={Projects[0]}
+      documents={Documents[0]}
     />;
 }
