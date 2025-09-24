@@ -10,6 +10,7 @@ import { registerErrorHandler } from "@config/error-handler.js";
 
 import { index } from '@routes/index.js';
 import { projectRoutes } from '@routes/projects.routes.js';
+import { releaseNotesRoutes } from '@routes/releaseNotes.routes.js';
 import  ajvErrors from 'ajv-errors';
 
 const fastify = Fastify({
@@ -30,5 +31,6 @@ fastify.register(fastifyCors, {origin: '*'})
 
 fastify.register(index)
 fastify.register(projectRoutes, {prefix: "/projects"})
+fastify.register(releaseNotesRoutes, {prefix: "/release"})
 
 export default fastify;
