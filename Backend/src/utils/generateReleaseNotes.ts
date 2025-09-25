@@ -1,87 +1,78 @@
-import { execSync } from "child_process";
 import fs from 'fs';
 import path from 'path';
 import fastify from '../app.js';
+import axios from 'axios';
+import type {AxiosRequestConfig} from 'axios';
+import parseDate from './date.js'
 
 import type {releaseNote} from 'src/types/releaseNotes.js'
+import type {GitLabCommit, GitLabCommitParsed} from 'src/types/gitlab.js'
+import gitlab from '@config/gitlab.js';
 
-const COMMIT_CATEGORIES = {
-  'feat': '🚀 Novas funcionalidades',
-  'fix': '🐞 Correções de bugs',
-  'docs': '📝 Documentação',
-  'refactor': '🔨 Refatoração',
-  'style': '🎨 Estilização',
-  'chore': '🔧 Tarefas internas',
-  'test': '🧪 Testes',
-  'perf': '⚡ Melhorias de performance',
-  'ci': '🤖 CI/CD'
-};
-
-function runCommand(command: string) {
+async function getLastTag(projectID: Number) {
   try {
-    return execSync(command, { encoding: 'utf-8' }).trim();
-  } catch (error: any) {
-    // Se o comando falhar, lança um erro com a mensagem de erro do stdout/stderr
-    throw new Error(`Erro ao executar o comando: ${command}\n${error.stdout || error.stderr}`);
-  }
-}
-
-function getLastTag() {
-  try {
-    const lastTag = runCommand('git describe --tags --abbrev=0');
-    return lastTag;
+    const axiosConfig: AxiosRequestConfig = {
+      method: 'get',
+      url: `${gitlab.host}/api/v4/projects/${projectID}/repository/tags`,
+      headers: {
+        'PRIVATE-TOKEN': `${gitlab.token}`,
+      },
+      params: {
+        order_by: 'updated',
+        sort: 'desc',
+        per_page: 2,
+      },
+    };
+    const tag = await axios.request(axiosConfig);
+    return tag.data[1].commit.created_at
+    
   } catch (error) {
     fastify.log.warn('Aviso: Nenhuma tag encontrada. Analisando todos os commits.');
     return null;
   }
 }
 
-function getCommitsSinceLastTag(lastTag: string | null) {
-  const commitRange = 'HEAD';
-  //const commitRange = lastTag ? `${lastTag}..HEAD` : 'HEAD';
+async function getCommitsSinceLastTag(branchName: string | null, tagCommitDate: string | null, projectID: Number) : Promise<GitLabCommit[]> {
+    const commitsConfig: AxiosRequestConfig = {
+      method: 'get',
+      url: `${gitlab.host}/api/v4/projects/${projectID}/repository/commits`,
+      headers: {
+        'PRIVATE-TOKEN': `${gitlab.token}`,
+      },
+      params: {
+        ref_name: branchName,
+        since: tagCommitDate,
+      },
+    };
   
-  let commitsLog = '';
   try {
-    commitsLog = runCommand(`git log --no-merges --format="%H--%s--%b" ${commitRange}`);
+    const commitsResponse = await axios.request<GitLabCommit[]>(commitsConfig);
+    return commitsResponse.data
+
   } catch (error: any) {
     if (error.message.includes('fatal: bad revision')) {
         fastify.log.error("Erro: A última tag não existe ou o repositório está vazio. Verifique se há commits.");
-        process.exit(1);
     }
     throw error;
   }
-
-  return commitsLog;
 }
 
-function parserCommit(commitList: string) {
-  // Use a string.split() to create an array of commits.
-  const commits = commitList.split('\n');
+function parserCommit(commitList: GitLabCommit[]): GitLabCommitParsed[] {
 
-  // Use the reduce() method to transform the array.
-  const commitsParsed = commits.reduce((accumulator, currentCommit) => {
-    // Check for empty strings from splitting the list
-    if (!currentCommit) {
-      return accumulator;
-    }
+  const commits = commitList.map(commit => {
+    return ({
+      "id": commit.short_id,
+      "title": commit.title,
+      "message": commit.message,
+      "author_email": commit.author_email,
+      "created_at": parseDate(commit.created_at)
+    })
+  })
 
-    // Split the commit into hash and message parts
-    let [hash, ...rest] = currentCommit.split('--');
-    
-    // Join the rest of the message and remove the last two characters
-    let message = rest.join('--').slice(0, -2);
-    
-    // Push the parsed string into the accumulator array
-    accumulator.push(`${hash?.slice(0, 8)} - ${message}`);
-
-    // Return the accumulator for the next iteration
-    return accumulator;
-  }, []); // Initialize the accumulator as an empty array []
-
-  return commitsParsed
+  return commits
 }
 
-function generateReleaseNote(parsedCommits: string[], filename: string, outputDir: string, metadata: releaseNote){
+function generateReleaseNote(parsedCommits: GitLabCommitParsed[], filename: string, outputDir: string, metadata: releaseNote){
     const filePath = path.resolve(outputDir, filename);
     const fileStream = fs.createWriteStream(filePath);
 
@@ -91,8 +82,12 @@ function generateReleaseNote(parsedCommits: string[], filename: string, outputDi
     fileStream.write(`${metadata.resume}\n\n`);
     fileStream.write('### Commits Realizados\n\n');
 
-    parsedCommits.forEach((commit) => {
-      fileStream.write(`- ${commit}\n`);
+    parsedCommits.forEach((commit: GitLabCommitParsed) => {
+      let text = `
+- **${commit.title}** (${commit.id}) por ${commit.author_email} em ${commit.created_at}
+  - Mensagem: ${commit.message}
+      `
+      fileStream.write(`${text}\n`);
     });
 
     fileStream.end(); // Fecha o stream após a escrita
@@ -100,18 +95,22 @@ function generateReleaseNote(parsedCommits: string[], filename: string, outputDi
 }
 
 // Lógica principal
-export default function generateReleaseNotes() {
+export default async function generateReleaseNotes() {
   const resume = "Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since the 1500s, when an unknown printer took a galley of type and scrambled it to make a type specimen book. It has survived not only five centuries, but also the leap into electronic typesetting, remaining essentially unchanged. It was popularised in the 1960s with the release of Letraset sheets containing Lorem Ipsum passages, and more recently with desktop publishing software like Aldus PageMaker including versions of Lorem Ipsum."
   
   const metadata : releaseNote = {
     "project": "Teste",
+    "projectID": 74704036,
+    "branch": 'main',
     "resume": resume,
     "release": "v1.0.0",
   }
-  
-  const lastTag = getLastTag();
-  const commits = getCommitsSinceLastTag(lastTag);
+
+  const lastTag = await getLastTag(metadata.projectID);
+  const commits = await getCommitsSinceLastTag(metadata.branch,lastTag,metadata.projectID);
   const parsedCommits = parserCommit(commits)
-  generateReleaseNote(parsedCommits,`release_notes_${metadata.project}.md`,process.env.RELEASE_NOTES_PATH,metadata)
+  const path = process.env.RELEASE_NOTES_PATH || 'public'
+
+  generateReleaseNote(parsedCommits,`release_notes_${metadata.project}.md`,path,metadata)
   
 }
