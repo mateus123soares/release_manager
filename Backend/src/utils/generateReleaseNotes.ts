@@ -9,7 +9,7 @@ import type {releaseNote} from 'src/types/releaseNotes.js'
 import type {GitLabCommit, GitLabCommitParsed} from 'src/types/gitlab.js'
 import gitlab from '@config/gitlab.js';
 
-async function getLastTag(projectID: Number) {
+async function getLastTag(projectID: number) {
   try {
     const axiosConfig: AxiosRequestConfig = {
       method: 'get',
@@ -27,12 +27,12 @@ async function getLastTag(projectID: Number) {
     return tag.data[1].commit.created_at
     
   } catch (error) {
-    fastify.log.warn('Aviso: Nenhuma tag encontrada. Analisando todos os commits.');
+    fastify.log.warn(`Aviso: Nenhuma tag encontrada. Analisando todos os commits. ${error}`);
     return null;
   }
 }
 
-async function getCommitsSinceLastTag(branchName: string | null, tagCommitDate: string | null, projectID: Number) : Promise<GitLabCommit[]> {
+async function getCommitsSinceLastTag(branchName: string | null, tagCommitDate: string | null, projectID: number) : Promise<GitLabCommit[]> {
     const commitsConfig: AxiosRequestConfig = {
       method: 'get',
       url: `${gitlab.host}/api/v4/projects/${projectID}/repository/commits`,
@@ -83,7 +83,7 @@ function generateReleaseNote(parsedCommits: GitLabCommitParsed[], filename: stri
     fileStream.write('### Commits Realizados\n\n');
 
     parsedCommits.forEach((commit: GitLabCommitParsed) => {
-      let text = `
+      const text: string = `
 - **${commit.title}** (${commit.id}) por ${commit.author_email} em ${commit.created_at}
   - Mensagem: ${commit.message}
       `

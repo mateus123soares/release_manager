@@ -1,6 +1,6 @@
 export interface releaseNote {
   project: string;
-  projectID: Number;
+  projectID: number;
   branch: string;
   resume: string;
   release: string;
