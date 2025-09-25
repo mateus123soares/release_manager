@@ -7,7 +7,7 @@ export function registerErrorHandler(
 ) {
   request.log.error(error);
 
-  const statusCode = (error as any).statusCode ?? 500;
+  const statusCode = (error).statusCode ?? 500;
 
   reply.status(statusCode).send({
     error: error.name,

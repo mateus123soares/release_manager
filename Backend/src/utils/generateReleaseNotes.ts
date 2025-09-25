@@ -49,11 +49,11 @@ async function getCommitsSinceLastTag(branchName: string | null, tagCommitDate: 
     const commitsResponse = await axios.request<GitLabCommit[]>(commitsConfig);
     return commitsResponse.data
 
-  } catch (error: any) {
-    if (error.message.includes('fatal: bad revision')) {
-        fastify.log.error("Erro: A última tag não existe ou o repositório está vazio. Verifique se há commits.");
+  } catch (error: unknown) {
+      if (error instanceof Error) {
+            fastify.log.error("Erro: A última tag não existe ou o repositório está vazio. Verifique se há commits.");
+        throw error;
     }
-    throw error;
   }
 }
 

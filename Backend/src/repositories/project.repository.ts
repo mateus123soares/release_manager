@@ -7,8 +7,9 @@ export class ProjectRepository {
     try {
       const { rows } = await client.query("SELECT * FROM projects");
       return rows;
-    } catch (err: any) {
-        throw handleDatabaseError(err); // qualquer outro erro de DB
+    } catch (err: unknown) {
+        if (err instanceof Error)
+          throw handleDatabaseError(err); // qualquer outro erro de DB
     }
   }
   async createOne(client: PoolClient, project: Project) {
@@ -25,8 +26,9 @@ export class ProjectRepository {
 
       return rows[0];
 
-    } catch (err: any) {
-        throw handleDatabaseError(err); // qualquer outro erro de DB
+    } catch (err: unknown) {
+        if (err instanceof Error)
+          throw handleDatabaseError(err); // qualquer outro erro de DB
     }
   }
 }

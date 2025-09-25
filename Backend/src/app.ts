@@ -16,7 +16,7 @@ import  ajvErrors from 'ajv-errors';
 const fastify = Fastify({
   logger: true,
   ajv: {
-    plugins: [ajvErrors as any], // ativa suporte a mensagens customizadas
+    plugins: [ajvErrors as any], // eslint-disable-line
     customOptions: { allErrors: true } // importante para capturar todas as mensagens
   }
 })
