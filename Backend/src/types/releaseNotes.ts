@@ -1,4 +1,4 @@
-export interface releaseNote {
+export interface ReleaseNote {
   project: string;
   projectID: number;
   branch: string;

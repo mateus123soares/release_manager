@@ -8,9 +8,10 @@ import { fastifyCors } from '@fastify/cors'
 import databaseConfig from '@config/database.js';
 import { registerErrorHandler } from "@config/error-handler.js";
 
-import { index } from '@routes/index.js';
+
 import { projectRoutes } from '@routes/projects.routes.js';
-import { releaseNotesRoutes } from '@routes/releaseNotes.routes.js';
+import { gitlabRoutes } from '@routes/gitlab.routes.js';
+
 import  ajvErrors from 'ajv-errors';
 
 const fastify = Fastify({
@@ -29,8 +30,7 @@ fastify.register(fastifyHelmet)
 fastify.register(fastifyPostgres,databaseConfig);
 fastify.register(fastifyCors, {origin: '*'})
 
-fastify.register(index)
 fastify.register(projectRoutes, {prefix: "/projects"})
-fastify.register(releaseNotesRoutes, {prefix: "/release"})
+fastify.register(gitlabRoutes, {prefix: "/gitlab"})
 
 export default fastify;
