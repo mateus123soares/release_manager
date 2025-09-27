@@ -1,13 +1,13 @@
-import type { FastifyError, FastifyRequest, FastifyReply } from "fastify";
+import type { FastifyError, FastifyRequest, FastifyReply } from 'fastify';
 
 export function registerErrorHandler(
   error: FastifyError,
   request: FastifyRequest,
-  reply: FastifyReply
+  reply: FastifyReply,
 ) {
   request.log.error(error);
 
-  const statusCode = (error).statusCode ?? 500;
+  const statusCode = error.statusCode ?? 500;
 
   reply.status(statusCode).send({
     error: error.name,

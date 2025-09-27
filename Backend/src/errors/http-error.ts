@@ -2,8 +2,8 @@ export class NotFoundError extends Error {
   statusCode: number;
 
   constructor(message?: string) {
-    super(message || "Recurso não encontrado"); // mensagem default
-    this.name = "NotFoundError";
+    super(message || 'Recurso não encontrado'); // mensagem default
+    this.name = 'NotFoundError';
     this.statusCode = 404;
   }
 }
@@ -12,8 +12,8 @@ export class BadRequestError extends Error {
   statusCode: number;
 
   constructor(message?: string) {
-    super(message || "Requisição inválida"); // mensagem default
-    this.name = "BadRequestError";
+    super(message || 'Requisição inválida'); // mensagem default
+    this.name = 'BadRequestError';
     this.statusCode = 400;
   }
 }

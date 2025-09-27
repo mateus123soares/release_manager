@@ -1,11 +1,12 @@
-import { handleDatabaseError } from "@errors/database-error.js";
-import type { PoolClient, QueryResult } from "pg";
-import type { Project } from "src/types/project.js";
+import type { PoolClient, QueryResult } from 'pg';
+
+import { handleDatabaseError } from '@errors/database-error.js';
+import type { Project } from 'src/types/project.js';
 
 export class ProjectRepository {
   async findAll(client: PoolClient): Promise<Project[]> {
     try {
-      const { rows } = await client.query<Project>("SELECT * FROM projects");
+      const { rows } = await client.query<Project>('SELECT * FROM projects');
       return rows;
     } catch (err: unknown) {
       if (err instanceof Error) {
@@ -38,23 +39,27 @@ export class ProjectRepository {
     }
   }
 
-  async createOne(client: PoolClient, project: Project): Promise<Project | undefined> {
+  async createOne(
+    client: PoolClient,
+    project: Project,
+  ): Promise<Project | undefined> {
     try {
-      
       const query = `
         INSERT INTO public.projects (name, description, gitlab_project_id)
         VALUES ($1, $2, $3)
         RETURNING *;
       `;
 
-      const values = [project.name, project.description, project.gitlab_project_id];
+      const values = [
+        project.name,
+        project.description,
+        project.gitlab_project_id,
+      ];
       const { rows } = await client.query(query, values);
 
       return rows[0];
-
     } catch (err: unknown) {
-        if (err instanceof Error)
-          throw handleDatabaseError(err);
+      if (err instanceof Error) throw handleDatabaseError(err);
     }
   }
 }

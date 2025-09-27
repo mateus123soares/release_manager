@@ -1,18 +1,16 @@
-import type { FastifyInstance } from "fastify";
-import { GitlabService } from "@services/gitlab.service.js";
+import type { FastifyInstance } from 'fastify';
 
-import { GitlabController } from "@controllers/gitlab.controller.js";
-import { ReleaseNoteService } from "@services/releaseNotes.service.js";
-
+import { FastifyLogger } from '@config/logger.js';
+import { GitlabController } from '@controllers/gitlab.controller.js';
+import { GitlabService } from '@services/gitlab.service.js';
+import { ReleaseNoteService } from '@services/releaseNotes.service.js';
 
 export async function gitlabRoutes(fastify: FastifyInstance) {
-  const releaseNotesService = new ReleaseNoteService()
-  const gitlabService = new GitlabService(fastify.log);
-  const controller = new GitlabController(gitlabService,releaseNotesService);
+  const logger = new FastifyLogger(fastify.log);
 
-  fastify.get(
-    "/",
-    controller.getProjectById.bind(controller)
-  );
+  const releaseNotesService = new ReleaseNoteService(logger);
+  const gitlabService = new GitlabService(logger);
+  const controller = new GitlabController(gitlabService, releaseNotesService);
 
+  fastify.get('/', controller.getProjectById.bind(controller));
 }
