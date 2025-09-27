@@ -13,4 +13,6 @@ export async function gitlabRoutes(fastify: FastifyInstance) {
   const controller = new GitlabController(gitlabService, releaseNotesService);
 
   fastify.get('/', controller.getProjectById.bind(controller));
+
+  fastify.get('/release-note', controller.postGenerateReleaseNote.bind(controller));
 }
