@@ -1,0 +1,135 @@
+{
+  "name": "Gitlab-Repository",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "release",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        -848,
+        -448
+      ],
+      "id": "7da8dc41-5b24-4e69-8cd1-7a89a8090aaa",
+      "name": "Webhook",
+      "webhookId": "49901655-2d0b-4e38-8aa1-eeed23c4037f"
+    },
+    {
+      "parameters": {
+        "url": "https://gitlab.com/api/v4/groups",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "gitlabApi",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "search",
+              "value": "={{ $json.body.group_name }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -576,
+        -448
+      ],
+      "id": "69e439c4-074f-4306-982a-b2e012d6bb1f",
+      "name": "Get Gitlab Group",
+      "notesInFlow": false,
+      "credentials": {
+        "gitlabApi": {
+          "id": "B7dtE4wAe3efy1ye",
+          "name": "GitLab account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://gitlab.com/api/v4/projects/",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "gitlabApi",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "name",
+              "value": "={{ $('Webhook').item.json.body.project_name }}"
+            },
+            {
+              "name": "visibility",
+              "value": "private"
+            },
+            {
+              "name": "namespace_id",
+              "value": "={{ $json.id }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -272,
+        -448
+      ],
+      "id": "c9584037-c4d4-449d-8fbf-c4d6f20b349a",
+      "name": "Post Criando repositorio",
+      "notesInFlow": false,
+      "credentials": {
+        "gitlabApi": {
+          "id": "B7dtE4wAe3efy1ye",
+          "name": "GitLab account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Get Gitlab Group",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Gitlab Group": {
+      "main": [
+        [
+          {
+            "node": "Post Criando repositorio",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Post Criando repositorio": {
+      "main": [
+        []
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "95bd3aad-59e7-4969-88ec-109c1b653eb7",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "5eafea87a3246b8771ba49e934d0268e8afc8733db24bafaa8cc6712ce3d9a7e"
+  },
+  "id": "LE0ZLUiEgGDv77YB",
+  "tags": []
+}

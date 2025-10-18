@@ -30,4 +30,48 @@ export class GitlabService {
       throw new NotFoundError('Nenhum projeto encontrado');
     }
   }
+
+  async getProjectGroups(projectID: number) {
+    try {
+      const axiosConfig: AxiosRequestConfig = {
+        method: 'get',
+        url: `${gitlab.host}/api/v4/projects/${projectID}/groups`,
+        headers: {
+          'PRIVATE-TOKEN': `${gitlab.token}`,
+        },
+      };
+      this.logger.info(`Info: buscando os grupos do projeto ${projectID} no Gitlab`);
+      const project = await axios.request(axiosConfig);
+
+      return project.data;
+
+    } catch (error) {
+      this.logger.warn(`Aviso: Nenhum grupo encontrado. ${error}`);
+      throw new NotFoundError('Nenhum grupo encontrado');
+    }
+  }
+
+  async postAddUserGroup(userID: number, groupID: number, accessLevel: number) {
+    try {
+      const axiosConfig: AxiosRequestConfig = {
+        method: 'post',
+        url: `${gitlab.host}/api/v4/groups/${groupID}/members`,
+        headers: {
+          'PRIVATE-TOKEN': `${gitlab.token}`,
+        },
+        data: {
+          user_id: userID,
+          access_level: accessLevel
+        }
+      };
+      this.logger.info(`Info: adicionando usuário ${userID} no grupo ${groupID}`);
+      const project = await axios.request(axiosConfig);
+
+      return project.data;
+
+    } catch (error) {
+      this.logger.warn(`Aviso: Erro ao adicionar usuario no grupo. ${error}`);
+      throw new NotFoundError('Erro ao adicionar usuario no grupo');
+    }
+  }
 }
